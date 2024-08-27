@@ -21,6 +21,7 @@
                     }
                 }), 400);
             }
+            console.log(recFlds);
             var recId = component.get('v.recordId');
             var objName = recFlds.Child_Object__c.value;
             var objRelField = recFlds.Relation_Field__c.value;
@@ -34,6 +35,15 @@
                     ExcFVal[i] = ExcFVal[i].trim();
                 }
             }
+            var FilterFields = recFlds.Filter_Fields__c.value;
+            console.log(FilterFields);
+            var FilterFieldVal = (FilterFields ? FilterFields.split(';') : '');
+            console.log("!!!");
+            console.log(FilterFieldVal);
+            if(Array.isArray(FilterFieldVal)) {
+                FilterFieldVal = FilterFieldVal.map(v => v.trim());
+            }
+            console.log(FilterFieldVal);
             var agrFld = recFlds.Summarize_By__c.value;
             var agrFldFval = agrFld ? agrFld : null;
             

@@ -15,24 +15,18 @@
     <aura:attribute name="kanbanSummaryField" type="string"/>
     <aura:attribute name="kanbanHeight" type="integer" default="250" access='global'/>
     <aura:attribute name="ExcVal" type="string" default=""/>
-    <aura:attribute name="delInfo" type="object"/>
-    
+    <aura:attribute name="delInfo" type="object"/>    
     <aura:attribute name="kanbanConfigId" type="string" access='global'/>
-    
     <aura:attribute name="kwrap" type="HomeChildKanbanUtil"/>
-    
     <aura:attribute name="isSuccess" type="boolean" default="true"/>
     <aura:attribute name="errorMessage" type="String"/>
-    
-    <!--<aura:handler name="init" value="this" action="{!c.doInit}"/>-->
-    <aura:handler name="kanbanChildChanged" event="c:HomeChildKanbanEvt" action="{!c.childChanged}"/>
-    <aura:handler name="kanbanChildDelReq" event="c:HomeChildKanbanDeleteEvt" action="{!c.childDelete}"/>
-    
- 	<!--{!v.kanbanConfigId.value}
-    {!v.record.Name}-->
     <aura:attribute name="record" type="Object"/>
     <aura:attribute name="simpleRecord" type="Object"/>
     <aura:attribute name="recordError" type="String"/>
+    <aura:attribute name="filterFieldMaps" type="Map" />
+    
+    <aura:handler name="kanbanChildChanged" event="c:HomeChildKanbanEvt" action="{!c.childChanged}"/>
+    <aura:handler name="kanbanChildDelReq" event="c:HomeChildKanbanDeleteEvt" action="{!c.childDelete}"/>
 
     <force:recordData aura:id="recordLoader"
                       recordId="{!v.kanbanConfigId}"
@@ -74,6 +68,13 @@
                 
             <aura:set attribute="actions">
                 <lightning:buttonGroup >
+                    <!--
+                    <c:custom_select value="{!v.filterFields}" aura:id="filterFields" label="Filter fields" placeholder="Filter fields" errorMessage="Invalid input" searchable="true">
+                        <aura:iteration items="{!v.allFieldsList.filterBy}" var="objwrap">
+                            <c:custom_option label="{!objwrap.objLabel}" value="{!objwrap.objName}"/>
+                        </aura:iteration>
+                    </c:custom_select>
+                    -->
                     <aura:if isTrue="{!v.kwrap.isCreatable}">
                         <lightning:button label="New" variant="neutral" onclick="{!c.initiateNewRecordCreation}"/>
                     </aura:if>

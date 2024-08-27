@@ -78,16 +78,20 @@ public with sharing class HomeChildKanbanCls {
         List<HomeChildKanbanObjUtil> aList = new List<HomeChildKanbanObjUtil>();
         List<HomeChildKanbanObjUtil> gList = new List<HomeChildKanbanObjUtil>();
         List<HomeChildKanbanObjUtil> sList = new List<HomeChildKanbanObjUtil>();
+        List<HomeChildKanbanObjUtil> fList = new List<HomeChildKanbanObjUtil>();
         
         for(Schema.SObjectField sfield : fieldMap.Values())
         {
             schema.describefieldresult dfield = sfield.getDescribe();
-            if(dfield.isAccessible() && dfield.isDeprecatedAndHidden() != true){
+            if(dfield.isAccessible() && !dfield.isDeprecatedAndHidden()){
                 string fldType = string.valueOf(dfield.getType());
                 HomeChildKanbanObjUtil hcu = new HomeChildKanbanObjUtil(dfield.getName(), dfield.getLabel());
                 aList.add(hcu);
                 if(dfield.isGroupable() && dfield.isUpdateable() && fldType == 'PICKLIST'){
                     gList.add(hcu);
+                }
+                if(dfield.isUpdateable() && (fldType == 'PICKLIST' || fldType == 'MULTIPICKLIST')){
+                    fList.add(hcu);
                 }
                 if(fldType == 'Double' || fldType == 'Integer' || fldType == 'Currency'){
                     sList.add(hcu);
@@ -97,6 +101,7 @@ public with sharing class HomeChildKanbanCls {
         objFldmap.put('all', aList);
         objFldmap.put('groupBy', gList);
         objFldmap.put('sumBy', sList);
+        objFldmap.put('filterBy', fList);
         return objFldmap;
     }
     
@@ -112,6 +117,22 @@ public with sharing class HomeChildKanbanCls {
         return plist;
     }
     
+    @AuraEnabled
+    public static Map<String, Map<String, String>> getFieldFilterValues(String objName, List<String> filterFields) {
+        Map<String, Map<String, String>> result = new Map<String, Map<String, String>>();
+        Map <String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
+        for(String field: filterFields) {
+            Map<String, String> mPicklistValues = new Map<String, String>();
+            Schema.DescribeFieldResult dfield = fieldMap.get(field).getDescribe();
+            List<Schema.PicklistEntry> pick_list_values = dfield.getPickListValues(); 
+            for (Schema.PicklistEntry a : pick_list_values) { 
+                mPicklistValues.put(a.getValue(), a.getLabel());
+            }            
+            result.put(field, mPicklistValues);
+        }
+        return result;
+    }
+
     @AuraEnabled
     public static HomeChildKanbanUtil getKanban(String objName, List<String> objFields, String kabnanField, String ParentRecId, String relField, List<string> ExcVal, String summField, String KbObjNameField){
         //system.debug(objFields);

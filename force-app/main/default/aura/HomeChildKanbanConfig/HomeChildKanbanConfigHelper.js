@@ -21,6 +21,7 @@
         var grpFldName = component.get('v.grpFldName');
         var sumFldName = component.get('v.sumFldName');
         var pickExclVals = component.get('v.pickExclVals');
+        var filterFields = component.get('v.filterFields');
         var configName = component.get('v.configName');
         var childObjectName = component.get('v.childObjectName');
         console.clear();
@@ -78,6 +79,7 @@
             sObj.Group_By__c = grpFldName;
             sObj.Fields_To_Show__c = cardFields;
             sObj.Exclude_From_Group_By__c = pickExclVals;
+            sObj.Filter_Fields__c = filterFields;
             var action = component.get('c.saveConfig');
             action.setParams({
                 'obj': sObj

@@ -41,6 +41,7 @@
                 component.set('v.childObjectName', null);
                 component.set('v.grpFldName', null);
                 component.set('v.sumFldName', null);
+                component.set('v.filterFields', null);
                 component.find('cardFields').externalValueChange('');
                 component.find('pickExclVals').externalValueChange('');
             }else{

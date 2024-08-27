@@ -17,6 +17,7 @@
     <aura:attribute name="cardFields" type="string"/>
     <aura:attribute name="grpFldName" type="string"/>
     <aura:attribute name="sumFldName" type="string"/>
+    <aura:attribute name="filterFields" type="string"/>
     <aura:attribute name="pickExclVals" type="string"/>
     <aura:attribute name="configName" type="string"/>
     <aura:attribute name="kanbanFor" type="string"/>
@@ -27,21 +28,6 @@
     
     <aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
     <aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>
-    
-    <!--
-    <aura:attribute name="record" type="Object"/>
-    <aura:attribute name="simpleRecord" type="Object"/>
-    <aura:attribute name="recordError" type="String"/>
-
-    <force:recordData aura:id="recordLoader"
-      recordId="{!v.recordId}"
-      layoutType="FULL"
-      targetRecord="{!v.record}"
-      targetFields="{!v.simpleRecord}"
-      targetError="{!v.recordError}"
-      recordUpdated="{!c.handleRecordUpdated}"
-      />
-    -->
     
     <br/>
     <div class="slds-container_small" style="margin:auto;">
@@ -122,7 +108,15 @@
                     </aura:iteration>
                 </c:custom_select>
                 </div>
-                
+
+                <div class="slds-m-top_x-small">
+                    <c:custom_select value="{!v.filterFields}" aura:id="filterFields" label="Filter fields" placeholder="Filter fields" errorMessage="Invalid input" searchable="true">
+                        <aura:iteration items="{!v.allFieldsList.filterBy}" var="objwrap">
+                            <c:custom_option label="{!objwrap.objLabel}" value="{!objwrap.objName}"/>
+                        </aura:iteration>
+                    </c:custom_select>
+                </div>                    
+
                 <div class="slds-m-top_x-small">
                     <c:custom_multiPickList value="{!v.pickExclVals}" aura:id="pickExclVals" placeholder="Plickist Values To Be Excluded" label="Exclude Values From Group By">
                         <aura:iteration items="{!v.allPickValList}" var="objwrap">
