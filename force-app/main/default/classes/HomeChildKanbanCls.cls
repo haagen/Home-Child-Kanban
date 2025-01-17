@@ -127,15 +127,24 @@ public with sharing class HomeChildKanbanCls {
             List<Schema.PicklistEntry> pick_list_values = dfield.getPickListValues(); 
             for (Schema.PicklistEntry a : pick_list_values) { 
                 mPicklistValues.put(a.getValue(), a.getLabel());
-            }            
-            result.put(field, mPicklistValues);
+            }
+            result.put(field + '|' + dfield.getLabel(), mPicklistValues);
         }
         return result;
     }
 
     @AuraEnabled
-    public static HomeChildKanbanUtil getKanban(String objName, List<String> objFields, String kabnanField, String ParentRecId, String relField, List<string> ExcVal, String summField, String KbObjNameField){
-        //system.debug(objFields);
+    public static HomeChildKanbanUtil getKanban(
+            String objName,
+            List<String> objFields,
+            String kabnanField,
+            String ParentRecId,
+            String relField,
+            List<String> ExcVal,
+            String summField,
+            String KbObjNameField,
+            List<String> filterField){
+
         if(summField != null){
             objFields.add(summField);
         }
@@ -238,8 +247,21 @@ public with sharing class HomeChildKanbanCls {
                     if(ParentRecId != '' && ParentRecId != null && relField != '' && relField != null){
                         qry += ' and '+relField+'=\''+ParentRecId+'\'';
                     }
+                    if(!filterField.isEmpty()) {
+                        String subString = '';
+                        for(String ff: filterField) {
+                            List<String> fv = ff.split(':');
+                            if(fv.size() == 2) {
+                                if(subString.length() >  0) subString += ' OR ';
+                                subString += fv.get(0) + '= \'' + fv.get(1) + '\'';
+                            }
+                        }
+                        if(subString.length() > 0) {
+                            qry += ' AND (' + subString + ')';
+                        }
+                    }
                     
-                    //system.debug('genquery '+ qry);   
+                    //System.debug('Generated Query: '+ qry);
                     
                     for(sobject s: database.query(qry)){
                         recMaps.get(string.valueOf(s.get(kabnanField))).add(s);

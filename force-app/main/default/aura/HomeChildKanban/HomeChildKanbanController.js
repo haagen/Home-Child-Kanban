@@ -8,11 +8,12 @@
 
 ({
     handleRecordUpdated : function(component, event, helper){
+        console.log('In the handleRecordUpdated function');
         var currentRec = component.get('v.record');
         if(!$A.util.isUndefinedOrNull(currentRec)){
             var recFlds = currentRec.fields;
-            var evtSrc = event.getSource();
-            if(evtSrc.getLocalId() == 'refreshButton'){
+            var evtSrc = event ? event.getSource() : false;
+            if(evtSrc && evtSrc.getLocalId() == 'refreshButton'){
                 helper.spinnerHelper(component, true);
                 $A.util.addClass(evtSrc,'refreshSpin');
                 window.setTimeout($A.getCallback(function(){
@@ -21,7 +22,6 @@
                     }
                 }), 400);
             }
-            console.log(recFlds);
             var recId = component.get('v.recordId');
             var objName = recFlds.Child_Object__c.value;
             var objRelField = recFlds.Relation_Field__c.value;
@@ -35,18 +35,29 @@
                     ExcFVal[i] = ExcFVal[i].trim();
                 }
             }
-            var FilterFields = recFlds.Filter_Fields__c.value;
-            console.log(FilterFields);
-            var FilterFieldVal = (FilterFields ? FilterFields.split(';') : '');
-            console.log("!!!");
-            console.log(FilterFieldVal);
+            let FilterFields = recFlds.Filter_Fields__c.value;
+            let FilterFieldVal = (FilterFields ? FilterFields.split(';') : '');
             if(Array.isArray(FilterFieldVal)) {
                 FilterFieldVal = FilterFieldVal.map(v => v.trim());
             }
-            console.log(FilterFieldVal);
             var agrFld = recFlds.Summarize_By__c.value;
             var agrFldFval = agrFld ? agrFld : null;
-            
+
+            let filterValues = [];
+            let  fieldFilterSelection = component.get('v.filterFieldMaps');
+            let hasLoadedFilterValues = component.get('v.hasLoadedFilterMaps');
+            if(hasLoadedFilterValues && fieldFilterSelection) {
+                for(let i=0;i<fieldFilterSelection.length;i++) {
+                    let field = fieldFilterSelection[i];
+                    for(let k=0;k<field.value.length;k++) {
+                        let value = field.value[k];
+                        if(value.checked) {
+                            filterValues.push(field.key+':'+value.key);
+                        }
+                    }
+                }
+            }
+
             if(objName && objFields && kanbanPicklistField){
                 //alert(recId + objName + objRelField + objFields + kanbanPicklistField);
                 var action = component.get('c.getKanban');
@@ -58,32 +69,88 @@
                     'ParentRecId' : recId,
                     'relField' : objRelField,
                     'ExcVal' : ExcFVal,
-                    'KbObjNameField' : KbObjNameField
+                    'KbObjNameField' : KbObjNameField,
+                    'filterField' : filterValues
                 });
                 action.setCallback(this, function(resp){
-                    /*console.log(resp.getState());
-                console.log(resp.getError());
-                console.clear();
-                console.log(resp.getReturnValue()); */          
-                helper.spinnerHelper(component, false);
-                if(resp.getState() === 'SUCCESS'){
-                    var rVal = resp.getReturnValue();
-                    component.set('v.isSuccess', rVal.isSuccess);
-                    if(rVal.isSuccess){
-                        for(var i=0; i<rVal.records.length; i++){
-                            rVal.records[i].kanbanfield = rVal.records[i][kanbanPicklistField];
+                        /*console.log(resp.getState());
+                    console.log(resp.getError());
+                    console.clear();
+                    console.log(resp.getReturnValue()); */
+                    helper.spinnerHelper(component, false);
+                    if(resp.getState() === 'SUCCESS'){
+                        var rVal = resp.getReturnValue();
+                        component.set('v.isSuccess', rVal.isSuccess);
+                        if(rVal.isSuccess){
+                            for(var i=0; i<rVal.records.length; i++){
+                                rVal.records[i].kanbanfield = rVal.records[i][kanbanPicklistField];
+                            }
+                            component.set('v.kwrap',rVal);
+                        }else{
+                            component.set('v.errorMessage', rVal.errorMessage);
                         }
-                        component.set('v.kwrap',rVal);
-                    }else{
-                        component.set('v.errorMessage', rVal.errorMessage);
                     }
-                }
-            });
-            $A.enqueueAction(action);
-        }
+                });
+                $A.enqueueAction(action);
+            }
+            if(Array.isArray(FilterFieldVal) && FilterFieldVal.length > 0 && !component.get('v.hasLoadedFilterMaps')) {
+                action = component.get('c.getFieldFilterValues');
+                action.setParams({
+                    'objName': objName,
+                    'filterFields': FilterFieldVal
+                });
+                action.setCallback(this, function(resp){
+                    if(resp.getState() === 'SUCCESS'){
+                        let rVal = resp.getReturnValue();
+                        let objs = [];
+                        for(let k in rVal) {
+                            let fields = [];
+                            for (let kk in rVal[k]){
+                                fields.push({
+                                    value: rVal[k][kk],
+                                    key: kk,
+                                    checked: false
+                                });
+                            }
+                            let splitField = k.split('|');
+                            objs.push({
+                                value: fields,
+                                key: splitField[0],
+                                label: splitField[1]
+                            })
+
+                        }
+                        component.set('v.filterFieldMaps', objs);
+                        component.set('v.hasLoadedFilterMaps', true);
+                    }
+                });
+                $A.enqueueAction(action);
+            }
         }
     },
-    childChanged : function(component, event, helper) {
+    onFilterMenuChange: function(component, event, helper) {
+        let selectedItemValue = event.getParam("value");
+        let field = selectedItemValue.split('.');
+        let filterFields = component.get('v.filterFieldMaps');
+        filterFields = filterFields.map(e => {
+            e.value = e.value.map(f => {
+                if(e.key === field[0]) {
+                    if(f.key === field[1]) {
+                        f.checked = !f.checked;
+                    }
+                }
+                return f;
+            });
+            return e;
+        });
+        component.set('v.filterFieldMaps',  filterFields);
+        let a = component.get('c.handleRecordUpdated');
+        a.setParams({});
+        a.setCallback(this, function() {});
+        $A.enqueueAction(a);
+
+    },
+    childChanged: function(component, event, helper) {
         var recFlds = component.get('v.record').fields;
         var data = event.getParam('KanbanChildChange');
         if(data.from != data.to){

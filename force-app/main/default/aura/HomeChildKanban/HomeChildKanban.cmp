@@ -24,6 +24,7 @@
     <aura:attribute name="simpleRecord" type="Object"/>
     <aura:attribute name="recordError" type="String"/>
     <aura:attribute name="filterFieldMaps" type="Map" />
+    <aura:attribute name="hasLoadedFilterMaps" type="Boolean" default="false" />
     
     <aura:handler name="kanbanChildChanged" event="c:HomeChildKanbanEvt" action="{!c.childChanged}"/>
     <aura:handler name="kanbanChildDelReq" event="c:HomeChildKanbanDeleteEvt" action="{!c.childDelete}"/>
@@ -68,17 +69,27 @@
                 
             <aura:set attribute="actions">
                 <lightning:buttonGroup >
-                    <!--
-                    <c:custom_select value="{!v.filterFields}" aura:id="filterFields" label="Filter fields" placeholder="Filter fields" errorMessage="Invalid input" searchable="true">
-                        <aura:iteration items="{!v.allFieldsList.filterBy}" var="objwrap">
-                            <c:custom_option label="{!objwrap.objLabel}" value="{!objwrap.objName}"/>
-                        </aura:iteration>
-                    </c:custom_select>
-                    -->
+
+<!--                    <c:custom_select value="{!v.filterFields}" aura:id="filterFields" label="Filter fields" placeholder="Filter fields" errorMessage="Invalid input" searchable="true">-->
+<!--                        <aura:iteration items="{!v.allFieldsList.filterBy}" var="objwrap">-->
+<!--                            <c:custom_option label="{!objwrap.objLabel}" value="{!objwrap.objName}"/>-->
+<!--                        </aura:iteration>-->
+<!--                    </c:custom_select>-->
+
+                    <aura:if isTrue="{!and(v.hasLoadedFilterMaps, not(empty(v.filterFieldMaps)))}">
+                        <lightning:buttonMenu alternativeText="Set filter" iconName="utility:filterList" onselect="{! c.onFilterMenuChange }">
+                            <aura:iteration items="{!v.filterFieldMaps}" var="perObjMaps" indexVar="key">
+                                <lightning:menuSubheader label="{!perObjMaps.label}" />
+                                <aura:iteration items="{!perObjMaps.value}" var="picklistPair" indexVar="key">
+                                    <lightning:menuItem value="{!concat(perObjMaps.key, concat('.', picklistPair.key))}" label="{!picklistPair.value}" checked="{!picklistPair.checked}"/>
+                                </aura:iteration>
+                            </aura:iteration>
+                        </lightning:buttonMenu>
+                    </aura:if>
                     <aura:if isTrue="{!v.kwrap.isCreatable}">
                         <lightning:button label="New" variant="neutral" onclick="{!c.initiateNewRecordCreation}"/>
                     </aura:if>
-                    <lightning:buttonIcon iconName="utility:refresh" variant="neutral" onclick="{!c.handleRecordUpdated}" alternativeText="Refresh Data" aura:id="refreshButton"/>
+                    <lightning:buttonIcon iconName="utility:refresh" onclick="{!c.handleRecordUpdated}" alternativeText="Refresh Data" aura:id="refreshButton"/>
                 </lightning:buttonGroup>
         		</aura:set>
             <div class="cardClass" style="position:relative;">

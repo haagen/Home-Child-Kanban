@@ -56,7 +56,6 @@
         }else{
             //something
         }
-        console.log('5 '+ isFormValid);
         //alert(isFormValid);
         if(isFormValid){
             var kf = component.get('v.kanbanFor');
